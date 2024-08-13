@@ -1,0 +1,119 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0.22
+    hostname: mysql
+    restart: on-failure
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=eoloplantsDB
+      - MYSQL_USER=root
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_PASSWORD=password
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+
+  mongo:
+    image: mongo:jammy
+    hostname: mongo
+    restart: on-failure
+    environment:
+      - MONGO_PORT=27017
+      - MONGO_HOST=mongo
+      - MONGO_INITDB_DATABASE=topo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3.11.10
+    hostname: rabbitmq
+    restart: on-failure
+    environment:
+      - RABBIT_PORT=5672
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_USER=guest
+      - RABBIT_PASS=guest    
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq
+
+  server:
+    image: manloralm/server:v0.1
+    hostname: server
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=eoloplantsDB
+      - MYSQL_USER=root
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_PASSWORD=password
+      - RABBIT_PORT=5672
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_USER=guest
+      - RABBIT_PASS=guest 
+    ports:
+      - 3000:3000
+    depends_on:
+      - mysql
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-p$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    
+  weatherservice:
+    image: manloralm/weatherservice:v0.1
+    hostname: weatherservice
+    environment:
+      - WEATHER_PORT=9090
+      - WEATHER_HOST=weatherservice
+    ports:
+      - 9090:9090
+    
+  planner:
+    image: manloralm/planner:latest
+    hostname: planner
+    environment:
+      - TOPO_HOST=toposervice
+      - TOPO_PORT=8181
+      - GRPC_HOST=weatherservice
+      - GRPC_PORT=9090
+      - RABBIT_PORT=5672
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_USER=guest
+      - RABBIT_PASS=guest       
+    ports:
+      - 8080:8080
+    depends_on:
+      - weatherservice
+      - toposervice
+      - rabbitmq
+    command: >
+      /bin/sh -c "./wait-for-it.sh weatherservice:9090 --timeout=0 
+      && ./wait-for-it.sh rabbitmq:5672 --timeout=0 
+      && ./wait-for-it.sh toposervice:8181 --timeout=0 
+      && java -jar planner-v0.1.jar"
+      
+  toposervice:
+    image: manloralm/toposervice:latest
+    hostname: toposervice
+    restart: on-failure
+    environment:
+      - TOPO_PORT=8181
+      - TOPO_HOST=toposervice
+      - MONGO_PORT=27017
+      - MONGO_HOST=mongo
+      - MONGO_INITDB_DATABASE=topo
+    ports:
+      - 8181:8181
+    depends_on:
+      - mongo
+          
