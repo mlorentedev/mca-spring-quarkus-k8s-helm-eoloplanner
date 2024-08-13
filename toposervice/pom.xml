@@ -11,9 +11,10 @@
     
     <groupId>es.codeurjc.mastercloudapps.reactive</groupId>
     <artifactId>toposervice</artifactId>
-    <version>v0.1</version>
+    <version>0.0.1-SNAPSHOT</version>
     
     <properties>
+        <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <java.version>17</java.version>
     </properties>
 
@@ -34,14 +35,27 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <configuration>
+                    <image>
+                        <name>manloralm/toposervice:${project.version}</name>
+                    </image>
+                </configuration>
             </plugin>
             <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.3.1</version>
-            </plugin>            
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>             
         </plugins>
     </build>
 

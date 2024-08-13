@@ -4,10 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.codeurjc.mastercloudapps</groupId>
 	<artifactId>server-quarkus</artifactId>
-	<version>v0.1</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<properties>
 		<compiler-plugin.version>3.8.1</compiler-plugin.version>
-		<maven.compiler.release>11</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -90,6 +89,8 @@
 					<compilerArgs>
 						<arg>-parameters</arg>
 					</compilerArgs>
+						<source>8</source>
+						<target>8</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -120,6 +121,17 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>io.quarkus</groupId>
+				<artifactId>quarkus-maven-plugin</artifactId>
+				<version>${quarkus.platform.version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<groupId>io.quarkus</groupId>
+				<artifactId>quarkus-container-image-docker</artifactId>
+				<version>${quarkus.platform.version}</version>
 			</plugin>
 		</plugins>
 	</build>

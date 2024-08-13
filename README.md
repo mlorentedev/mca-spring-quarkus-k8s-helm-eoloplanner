@@ -1,65 +1,89 @@
 # Docker and containers
 
-Dockerize few microservices to operate together.  
+Dockerize few microservices to operate together with GraalVM 17.0.8+9.1 and Maven 3.9.4
 
-## Dev environment: launch services manually  
+[Video](https://drive.google.com/file/d/14eQm9iGEsF6P2vXCFCtKzBGzeLR3FdMY/view?usp=sharing)
 
-### Create docker-compose-dev.yml to configure MySQL, MongoDB and RabbitMQ  
+## Dev environment
+
+### Deploy auxiliary services MySQL, MongoDB and RabbitMQ  
 
 ``` bash
- docker-compose -f docker-compose-dev.yml up
+docker-compose -f docker-compose-dev.yml up
 ```  
 
-or
+### Build and run services in containers using dev containers with VSCode
+
+#### TOPOSERVICE  
 
 ``` bash
- docker run -d --name mysql --network host -p 3306:3306 -e MYSQL_HOST=mysql -e MYSQL_DATABASE=eoloplantsDB -e MYSQL_USER=root -e MYSQL_ROOT_PASSWORD=password --restart=on-failure mysql:8.0.22
+export TOPO_PORT=8181
+export SPRING_DATA_MONGODB_HOST=localhost
+export SPRING_DATA_MONGODB_PORT=27017
+export SPRING_DATA_MONGODB_DATABASE=topoDB
+export SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=admin
+export SPRING_DATA_MONGODB_USERNAME=root
+export SPRING_DATA_MONGODB_PASSWORD=password
+mvn spring-boot:run
 ```
 
-``` bash
- docker run -d --name mongo --network host -p 27017:27017 -e MONGO_PORT=27017 -e MONGO_HOST=mongo -e MONGO_INITDB_DATABASE=topo --restart=on-failure mongo:jammy
-```
+#### WEATHERSERVICE  
 
 ``` bash
- docker run -d --name rabbitmq --network host -p 5672:5672 -p 15672:15672 -e RABBIT_PORT=5672 -e RABBIT_USER=root -e RABBIT_PASS=password --restart=on-failure rabbitmq:3.11.10
+export QUARKUS_GRPC_SERVER_HOST=localhost
+export QUARKUS_GRPC_SERVER_PORT=9090 
+mvn quarkus:dev
 ```
+
+#### PLANNER
+
+``` bash
+export TOPO_HOST=toposervice
+export TOPO_PORT=8181
+export GRPC_CLIENT_WEATHERSERVER_ADDRESS=static://weatherservice:9090 
+export SPRING_CLOUD_STREAM_RABBIT_BINDER_NODES=rabbitmq:5672
+export SPRING_RABBITMQ_HOST=localhost
+export SPRING_RABBITMQ_PORT=5672
+export SPRING_RABBITMQ_USERNAME=root
+export SPRING_RABBITMQ_PASSWORD=password
+mvn spring-boot:run
+```
+
+#### SERVER
+
+``` bash
+export QUARKUS_DATASOURCE_DB_KIND=mysql
+export QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://localhost/eoloplantsDB
+export QUARKUS_DATASOURCE_USERNAME=root
+export QUARKUS_DATASOURCE_PASSWORD=password
+export RABBITMQ_HOST=localhost
+export RABBITMQ_PORT=5672
+export RABBITMQ_USERNAME=root
+export RABBITMQ_PASSWORD=password 
+mvn quarkus:dev
+```
+
+## Prod environment  
 
 ### Build and publish all services  
 
 ``` bash
- docker run -it -d --name weatherservice --network host -e WEATHER_PORT=9090 -p 9090:9090 manloralm/weatherservice:v0.1
+docker login
+./build-push-services.sh -u YOUR_DOCKERHUB_NAME -v YOUR_IMAGE_TAG
 ```
 
-``` bash
- docker run -it -d --name toposervice --network host -e TOPO_PORT=8181 -e TOPO_HOST=toposervice -e MONGO_PORT=27017 -e MONGO_HOST=localhost -e MONGO_INITDB_DATABASE=topo -d -p 8181:8181 manloralm/toposervice:v0.1
-```
+### Deploy all services in containers
 
 ``` bash
- docker run -it -d --name planner --network host -e WEATHER_PORT=9090 -e RABBIT_PORT=5672 -p 8080:8080 manloralm/planner:latest
-```
-
-``` bash
- docker run -it -d --name server --network host -e MYSQL_HOST=mysql -e MYSQL_USER=root -e MYSQL_ROOT_PASSWORD=password -e MYSQL_PASSWORD=password -e MYSQL_DATABASE=eoloplantsDB -e RABBIT_PORT=5672 -p 3000:3000 manloralm/server:v0.1
-```
-
-## Prod environment: dockerize and publish all services in DockerHub  
-
-``` bash
-./build-push-services.sh 
-```
-
-## Execute services running below command
-
-``` bash
- docker-compose -f docker-compose-prod.yml up
+docker-compose -f docker-compose-prod.yml up
 ```
 
 ## Services endpoint  
 
-The app will be served in <http://localhost:3000>  
+The app will be served in <http://localhost:8080>  
 
-## To remove all containers  
+## Remove all containers, images and generated data
 
 ``` bash
-docker rm -f $(docker ps -a -q)
+./clean-all.sh
 ```
