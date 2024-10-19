@@ -92,6 +92,8 @@
 
 
 # Ignore binary files from language detection
+*.html linguist-generated
+*.css linguist-generated
 *.png linguist-vendored
 *.jpg linguist-vendored
 *.gif linguist-vendored
