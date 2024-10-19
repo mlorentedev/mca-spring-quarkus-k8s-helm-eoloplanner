@@ -1,0 +1,6 @@
+1. Get the application URL by running these commands:
+
+Server -> http://{{ .Values.ingress.host }}{{ .Values.ingress.frontPath }}
+Toposervice API -> http://{{ .Values.ingress.host }}{{ .Values.ingress.topoPath }}/api/topographicdetails/Sevilla
+
+

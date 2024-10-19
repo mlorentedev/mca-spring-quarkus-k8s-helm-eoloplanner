@@ -1,18 +1,60 @@
-# Docker and containers
+# EoloPlanner microservices application
 
-Dockerize few microservices to operate together with GraalVM 17.0.8+9.1 and Maven 3.9.4
+This project consists of multiple services that manage topology data, weather information, planning, and general operations. The services are designed to communicate via RabbitMQ, with MongoDB and MySQL as data storage backends.
 
 [Video](https://drive.google.com/file/d/14eQm9iGEsF6P2vXCFCtKzBGzeLR3FdMY/view?usp=sharing)
 
-## Dev environment
+## Tech Stack
 
-### Deploy auxiliary services MySQL, MongoDB and RabbitMQ  
+| **Technology** | **Description** |
+|----------------|-----------------|
+| JVM | GraalVM 17.0.8 |
+| Backend | Spring Boot 2.5.5, Quarkus 2.3.0 |
+| Database | MySQL 8.0.26, MongoDB 4.4.9 |
+| Messaging | RabbitMQ 3.9.7 |
+| Dependencies | Maven 3.8.2 |
+| Containerization | Docker 20.10.8, Docker Compose 1.29.2 |
+| Dev Containers | Visual Studio Code 1.60.2 |
+| Orchestrator | Kubernetes 1.22.2, Helm 3.7.0 |
 
-``` bash
-docker-compose -f docker-compose-dev.yml up
-```  
+## Features
 
-### Build and run services in containers using dev containers with VSCode
+- Containerized microservices using Docker
+- Microservices include TopoService, WeatherService, Planner, and Server
+- Integration of MongoDB, MySQL, and RabbitMQ for service communication
+- Kubernetes and Helm configurations for production-level deployments
+- Environment-specific configurations for development and production
+
+## Overview
+
+- **TopoService**: Provides topographic details of a location. MongoDB is used for storing topology data.
+- **WeatherService**: Provides weather information of a location using gRPC. The service is built using Quarkus.
+- **Planner**: This service coordinates between TopoService and WeatherService. It retrieves data from both services (using REST and gRPC) .
+- **Server**: The main server for the system, responsible for managing general operations and data from other services. It connects to a MySQL database and RabbitMQ for messaging.
+
+## Getting started
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+- Maven
+- GraalVM
+- Visual Studio Code
+
+### Running the Application (Dev environment)
+
+1. Clone the repository
+
+2. Navigate to the project directory
+
+3. Deploy auxiliary services MySQL, MongoDB and RabbitMQ  
+
+    ``` bash
+    docker-compose -f docker-compose-dev.yml up
+    ```  
+
+4. Build and run services in containers using dev containers with VSCode
 
 #### TOPOSERVICE  
 
@@ -63,27 +105,65 @@ export RABBITMQ_PASSWORD=password
 mvn quarkus:dev
 ```
 
-## Prod environment  
+### Running the Application (Prod environment)
 
-### Build and publish all services  
+1. Clone the repository
 
-``` bash
-docker login
-./build-push-services.sh -u YOUR_DOCKERHUB_NAME -v YOUR_IMAGE_TAG
-```
+2. Navigate to the project directory
 
-### Deploy all services in containers
+3. Log in to Docker
 
-``` bash
-docker-compose -f docker-compose-prod.yml up
-```
+    ``` bash
+    docker login
+    ```
+
+4. Build and publish all services  
+
+    ``` bash
+    docker login
+    ./build-push-services.sh -u YOUR_DOCKERHUB_NAME -v YOUR_IMAGE_TAG
+    ```
+
+5. Deploy all services in containers
+
+    ``` bash
+    docker-compose -f docker-compose-prod.yml up
+    ```
+
+### Kubernetes and Helm deployment
+
+For production environments, you can also deploy the services using Kubernetes and Helm.
+
+1. Kubernetes manifests are located in the `k8s` directory.
+
+    ``` bash
+    kubectl apply -f k8s/
+    ```
+
+2. Helm charts are located in the `helm` directory.
+
+    ``` bash
+    helm install eoloplanner helm/
+    ```
 
 ## Services endpoint  
 
 The app will be served in <http://localhost:8080>  
 
-## Remove all containers, images and generated data
+## Clean up
+
+To remove all containers, images, and generated data, run the following script:
 
 ``` bash
 ./clean-all.sh
 ```
+
+## Change Log
+
+| **Version** | **Description** |
+|-------------|-----------------|
+| 0.0.1       | Initial release |
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

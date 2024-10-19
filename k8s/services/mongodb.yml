@@ -1,0 +1,64 @@
+# MONGODB
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mongodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:5.0-focal
+        ports:
+        - containerPort: 27017
+          name: mongodb-27017
+        - containerPort: 27018
+          name: mongodb-27018
+        - containerPort: 27019
+          name: mongodb-27019
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: topoDB
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: root
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: password
+        volumeMounts:
+        - name: mongodb-persistent-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongodb-persistent-storage
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+    name: mongo-port-27017
+    protocol: TCP
+  - port: 27018
+    targetPort: 27018
+    name: mongo-port-27018
+    protocol: TCP
+  - port: 27019
+    targetPort: 27019
+    name: mongo-port-27019
+    protocol: TCP
+  type: ClusterIP

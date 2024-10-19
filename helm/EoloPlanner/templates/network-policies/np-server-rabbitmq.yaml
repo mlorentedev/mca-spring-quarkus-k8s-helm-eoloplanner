@@ -1,0 +1,35 @@
+{{ if .Values.networkPolicies.server-rabbitmq }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: server-to-rabbitmq
+spec:
+  podSelector:
+    matchLabels:
+      app: serverservice
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            app: rabbitmq
+      ports:
+      - port: 5672
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq-from-server
+spec:
+  podSelector:
+    matchLabels:
+      app: rabbitmq
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app: serverservice
+      ports:
+      - protocol: TCP
+        port: 5672
+{{ end }}

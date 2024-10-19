@@ -1,0 +1,35 @@
+{{ if .Values.networkPolicies.planner-topo }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: planner-to-topo
+spec:
+  podSelector:
+    matchLabels:
+      app: planner
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            app: toposervice
+      ports:
+      - port: 8181
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: topo-from-planner
+spec:
+  podSelector:
+    matchLabels:
+      app: toposervice
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app: planner
+      ports:
+      - protocol: TCP
+        port: 8181
+{{ end }}

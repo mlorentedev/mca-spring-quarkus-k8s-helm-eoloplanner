@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weatherservice
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: weatherservice
+  template:
+    metadata:
+      labels:
+        app: weatherservice
+    spec:
+      securityContext:
+        runAsUser: 1001
+      restartPolicy: Always
+      containers:
+      - name: weather
+        image: {{ .Values.weatherservice.image.name }}:{{ .Values.weatherservice.image.version }}
+        securityContext:
+          allowPrivilegeEscalation: false        
+        env:
+        - name: QUARKUS_GRPC_SERVER_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: QUARKUS_GRPC_SERVER_PORT
+          value: "9090"
+        ports:
+        - containerPort: 9090
+  replicas: 1

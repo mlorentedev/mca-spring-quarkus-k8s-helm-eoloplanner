@@ -1,0 +1,46 @@
+# WEATHER
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: weatherservice
+  template:
+    metadata:
+      labels:
+        app: weatherservice
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: weather
+        image: mastercloudapps/weatherservice:v1.23
+        env:
+        - name: QUARKUS_GRPC_SERVER_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: QUARKUS_GRPC_SERVER_PORT
+          value: "9090"
+        ports:
+        - containerPort: 9090
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weatherservice
+  labels:
+    app: weatherservice
+spec:
+  selector:
+    app: weatherservice
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
